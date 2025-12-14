@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Smart Parking</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Custom Animation -->
+  <style>
+    body {
+      background: linear-gradient(270deg, #020617, #020617, #0f172a, #020617);
+      background-size: 600% 600%;
+      animation: bgMove 15s ease infinite;
+    }
+
+    @keyframes bgMove {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .glow {
+      box-shadow: 0 0 15px rgba(56,189,248,0.6);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center text-white px-4">
+
+  <h1 class="text-4xl font-bold mt-8 mb-6 tracking-wide">
+    🚗 Smart Parking System
+  </h1>
+
+  <!-- PALANG MASUK -->
+  <div class="bg-slate-900/80 backdrop-blur rounded-2xl p-6 w-80 mb-6 shadow-xl">
+    <h2 class="text-xl font-semibold mb-4 text-cyan-400">Palang Masuk</h2>
+
+    <div class="flex justify-between">
+      <button onclick="sendCmd('openMasuk')"
+        class="w-32 py-3 rounded-xl bg-green-600 hover:bg-green-500 
+        hover:scale-105 transition-all glow">
+        Buka
+      </button>
+
+      <button onclick="sendCmd('closeMasuk')"
+        class="w-32 py-3 rounded-xl bg-red-600 hover:bg-red-500 
+        hover:scale-105 transition-all">
+        Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- PALANG KELUAR -->
+  <div class="bg-slate-900/80 backdrop-blur rounded-2xl p-6 w-80 mb-6 shadow-xl">
+    <h2 class="text-xl font-semibold mb-4 text-purple-400">Palang Keluar</h2>
+
+    <div class="flex justify-between">
+      <button onclick="sendCmd('openKeluar')"
+        class="w-32 py-3 rounded-xl bg-green-600 hover:bg-green-500 
+        hover:scale-105 transition-all glow">
+        Buka
+      </button>
+
+      <button onclick="sendCmd('closeKeluar')"
+        class="w-32 py-3 rounded-xl bg-red-600 hover:bg-red-500 
+        hover:scale-105 transition-all">
+        Tutup
+      </button>
+    </div>
+  </div>
+
+  <!-- JUMLAH KENDARAAN -->
+  <div class="bg-slate-900/90 rounded-2xl p-6 w-80 mb-6 shadow-2xl text-center">
+    <h3 class="text-lg text-gray-400 mb-2">Jumlah Kendaraan (WEB)</h3>
+    <h1 id="jumlah" class="text-6xl font-bold text-cyan-300">0</h1>
+  </div>
+
+  <!-- RESET -->
+  <div class="bg-slate-900/80 rounded-2xl p-6 w-80 shadow-xl">
+    <button onclick="resetWeb()"
+      class="w-full py-4 rounded-xl bg-red-700 hover:bg-red-600 
+      hover:scale-105 transition-all font-bold tracking-wider">
+      RESET WEB
+    </button>
+  </div>
+
+<script>
+const BACKEND = "http://10.113.238.11:3000";
+const DEVICE_ID = "ESP32_1";
+
+// ===== KIRIM COMMAND =====
+function sendCmd(cmd) {
+  fetch(BACKEND + "/command", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      deviceId: DEVICE_ID,
+      command: cmd
+    })
+  }).then(() => console.log("CMD SENT:", cmd));
+}
+
+// ===== RESET WEB =====
+function resetWeb() {
+  fetch(BACKEND + "/reset", { method: "POST" })
+    .then(() => {
+      document.getElementById("jumlah").innerText = 0;
+      console.log("WEB RESET OK");
+    });
+}
+
+// ===== UPDATE REALTIME =====
+setInterval(() => {
+  fetch(BACKEND + "/status")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("jumlah").innerText = data.kendaraan;
+    });
+}, 1000);
+</script>
+
+</body>
+</html>
